@@ -95,7 +95,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
                   }
                 />
                 <Tooltip
-                  formatter={(value: number) => [formatCurrency(value), undefined]}
+                  formatter={(value: unknown) => [formatCurrency(Number(value)), undefined]}
                 />
                 <Legend />
                 <Bar dataKey="totalFee" name="Total Fee" fill="#93c5fd" radius={[4, 4, 0, 0]} />
@@ -120,8 +120,8 @@ export function DashboardClient({ data }: DashboardClientProps) {
                   cx="50%"
                   cy="50%"
                   outerRadius={100}
-                  label={({ name, percent }: { name: string; percent: number }) =>
-                    `${name} ${(percent * 100).toFixed(0)}%`
+                  label={({ name, percent }: { name?: string; percent?: number }) =>
+                    `${name ?? ''} ${((percent ?? 0) * 100).toFixed(0)}%`
                   }
                   labelLine={false}
                 >
@@ -129,7 +129,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
                     <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => [`${value} students`, undefined]} />
+                <Tooltip formatter={(value: unknown) => [`${value} students`, undefined]} />
               </PieChart>
             </ResponsiveContainer>
           )}
