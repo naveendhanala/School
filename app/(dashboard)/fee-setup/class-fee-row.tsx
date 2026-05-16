@@ -18,13 +18,31 @@ export function ClassFeeRow({ classId, className, academicYearId, tuition, book 
   const [bookVal, setBookVal] = useState(String(book))
   const [isPending, startTransition] = useTransition()
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSave = () => {
+    const parsedTuition = parseFloat(tuitionVal)
+    const parsedBook = parseFloat(bookVal)
+
+    if (isNaN(parsedTuition) || parsedTuition < 0) {
+      setError('Tuition fee must be a valid non-negative number.')
+      return
+    }
+    if (isNaN(parsedBook) || parsedBook < 0) {
+      setError('Book fee must be a valid non-negative number.')
+      return
+    }
+
     startTransition(async () => {
-      await upsertClassFee(academicYearId, classId, 'tuition', parseFloat(tuitionVal) || 0)
-      await upsertClassFee(academicYearId, classId, 'book', parseFloat(bookVal) || 0)
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
+      try {
+        await upsertClassFee(academicYearId, classId, 'tuition', parsedTuition)
+        await upsertClassFee(academicYearId, classId, 'book', parsedBook)
+        setError(null)
+        setSaved(true)
+        setTimeout(() => setSaved(false), 2000)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to save fees. Please try again.')
+      }
     })
   }
 
@@ -36,8 +54,9 @@ export function ClassFeeRow({ classId, className, academicYearId, tuition, book 
           type="number"
           min="0"
           value={tuitionVal}
-          onChange={e => { setTuitionVal(e.target.value); setSaved(false) }}
+          onChange={e => { setTuitionVal(e.target.value); setSaved(false); setError(null) }}
           className="w-32 h-8 text-sm"
+          aria-label="Tuition fee"
         />
       </td>
       <td className="px-3 py-2">
@@ -45,14 +64,18 @@ export function ClassFeeRow({ classId, className, academicYearId, tuition, book 
           type="number"
           min="0"
           value={bookVal}
-          onChange={e => { setBookVal(e.target.value); setSaved(false) }}
+          onChange={e => { setBookVal(e.target.value); setSaved(false); setError(null) }}
           className="w-32 h-8 text-sm"
+          aria-label="Book fee"
         />
       </td>
       <td className="px-3 py-2">
         <Button size="sm" onClick={handleSave} disabled={isPending}>
           {isPending ? 'Saving…' : saved ? 'Saved ✓' : 'Save'}
         </Button>
+        {error !== null && (
+          <p className="text-xs text-red-600 mt-1">{error}</p>
+        )}
       </td>
     </tr>
   )
