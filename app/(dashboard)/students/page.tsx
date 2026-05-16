@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { calcStudentFee } from '@/lib/utils/fee-calc'
 import type { Gender } from '@/lib/types'
+import { StudentsClient } from './students-client'
 
 export interface StudentRow {
   id: string
@@ -138,21 +139,13 @@ export default async function StudentsPage() {
   const nums = (allStudents ?? []).map(s => parseInt(s.adm_no, 10)).filter(n => !isNaN(n))
   const suggestedAdmNo = nums.length === 0 ? '1' : String(Math.max(...nums) + 1)
 
-  // StudentsClient will be wired in Task 10
   return (
-    <div className="p-6">
-      <p className="text-gray-400 text-sm">Students client loading… (Task 10 will complete this)</p>
-      <pre className="text-xs text-gray-300">{JSON.stringify({ rowCount: rows.length, activeYear: activeYear.label }, null, 2)}</pre>
-    </div>
+    <StudentsClient
+      rows={rows}
+      classes={classes ?? []}
+      routes={routes ?? []}
+      activeYearLabel={activeYear.label}
+      suggestedAdmNo={suggestedAdmNo}
+    />
   )
-  // Task 10 replaces the above return with:
-  // return (
-  //   <StudentsClient
-  //     rows={rows}
-  //     classes={classes ?? []}
-  //     routes={routes ?? []}
-  //     activeYearLabel={activeYear.label}
-  //     suggestedAdmNo={suggestedAdmNo}
-  //   />
-  // )
 }
