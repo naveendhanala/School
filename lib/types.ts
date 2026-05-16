@@ -7,26 +7,26 @@ export type Course = 'IIT' | 'NON-IIT'
 export type Gender = 'male' | 'female'
 export type BridgePaymentMode = 'cash' | 'phonepe' | 'hdfc'
 
-export interface AcademicYear {
+export type AcademicYear = {
   id: string
   label: string
   is_active: boolean
   created_at: string
 }
 
-export interface Class {
+export type Class = {
   id: string
   name: string
   sort_order: number
 }
 
-export interface TransportRoute {
+export type TransportRoute = {
   id: string
   name: string
   fee_amount: number
 }
 
-export interface Student {
+export type Student = {
   id: string
   adm_no: string
   name: string
@@ -37,7 +37,7 @@ export interface Student {
   created_at: string
 }
 
-export interface Enrollment {
+export type Enrollment = {
   id: string
   student_id: string
   academic_year_id: string
@@ -45,7 +45,7 @@ export interface Enrollment {
   route_id: string | null
 }
 
-export interface FeeStructure {
+export type FeeStructure = {
   id: string
   academic_year_id: string
   class_id: string
@@ -53,14 +53,14 @@ export interface FeeStructure {
   amount: number
 }
 
-export interface StudentFee {
+export type StudentFee = {
   id: string
   enrollment_id: string
   fee_head: StudentFeeHead
   amount: number
 }
 
-export interface Payment {
+export type Payment = {
   id: string
   enrollment_id: string
   fee_head: FeeHead
@@ -74,7 +74,7 @@ export interface Payment {
   created_by: string | null
 }
 
-export interface BankDeposit {
+export type BankDeposit = {
   id: string
   academic_year_id: string
   bank_name: string
@@ -86,7 +86,7 @@ export interface BankDeposit {
   created_at: string
 }
 
-export interface BridgeStudent {
+export type BridgeStudent = {
   id: string
   academic_year_id: string
   voucher_no: string
@@ -98,14 +98,14 @@ export interface BridgeStudent {
   created_at: string
 }
 
-export interface BridgePayment {
+export type BridgePayment = {
   id: string
   bridge_student_id: string
   mode: BridgePaymentMode
   amount: number
 }
 
-export interface BridgeDeposit {
+export type BridgeDeposit = {
   id: string
   academic_year_id: string
   bank_name: string
@@ -115,18 +115,21 @@ export interface BridgeDeposit {
   created_at: string
 }
 
-export interface Profile {
+export type Profile = {
   id: string
   name: string
   role: Role
 }
 
-export interface ReceiptSequence {
+export type ReceiptSequence = {
   academic_year_id: string
   last_number: number
 }
 
-// Supabase Database type (used to type the client)
+// Supabase Database type (used to type the Supabase client).
+// Row types must be `type` aliases (not `interface`) so they satisfy
+// the GenericTable constraint (Record<string, unknown>) in @supabase/supabase-js.
+// Each table entry must also include `Relationships: []`.
 export type Database = {
   public: {
     Tables: {
@@ -134,73 +137,88 @@ export type Database = {
         Row: AcademicYear
         Insert: Omit<AcademicYear, 'id' | 'created_at'>
         Update: Partial<Omit<AcademicYear, 'id'>>
+        Relationships: []
       }
       classes: {
         Row: Class
         Insert: Omit<Class, 'id'>
         Update: Partial<Omit<Class, 'id'>>
+        Relationships: []
       }
       transport_routes: {
         Row: TransportRoute
         Insert: Omit<TransportRoute, 'id'>
         Update: Partial<Omit<TransportRoute, 'id'>>
+        Relationships: []
       }
       students: {
         Row: Student
         Insert: Omit<Student, 'id' | 'created_at'>
         Update: Partial<Omit<Student, 'id' | 'created_at'>>
+        Relationships: []
       }
       enrollments: {
         Row: Enrollment
         Insert: Omit<Enrollment, 'id'>
         Update: Partial<Omit<Enrollment, 'id'>>
+        Relationships: []
       }
       fee_structure: {
         Row: FeeStructure
         Insert: Omit<FeeStructure, 'id'>
         Update: Partial<Omit<FeeStructure, 'id'>>
+        Relationships: []
       }
       student_fees: {
         Row: StudentFee
         Insert: Omit<StudentFee, 'id'>
         Update: Partial<Omit<StudentFee, 'id'>>
+        Relationships: []
       }
       receipt_sequences: {
         Row: ReceiptSequence
         Insert: { academic_year_id: string; last_number?: number }
         Update: { last_number?: number }
+        Relationships: []
       }
       payments: {
         Row: Payment
         Insert: Omit<Payment, 'id' | 'created_at'>
         Update: Partial<Omit<Payment, 'id' | 'created_at'>>
+        Relationships: []
       }
       bank_deposits: {
         Row: BankDeposit
         Insert: Omit<BankDeposit, 'id' | 'created_at'>
         Update: Partial<Omit<BankDeposit, 'id' | 'created_at'>>
+        Relationships: []
       }
       bridge_students: {
         Row: BridgeStudent
         Insert: Omit<BridgeStudent, 'id' | 'created_at'>
         Update: Partial<Omit<BridgeStudent, 'id' | 'created_at'>>
+        Relationships: []
       }
       bridge_payments: {
         Row: BridgePayment
         Insert: Omit<BridgePayment, 'id'>
         Update: Partial<Omit<BridgePayment, 'id'>>
+        Relationships: []
       }
       bridge_deposits: {
         Row: BridgeDeposit
         Insert: Omit<BridgeDeposit, 'id' | 'created_at'>
         Update: Partial<Omit<BridgeDeposit, 'id' | 'created_at'>>
+        Relationships: []
       }
       profiles: {
         Row: Profile
         Insert: Profile
         Update: Partial<Omit<Profile, 'id'>>
+        Relationships: []
       }
     }
+    Views: Record<string, never>
     Functions: {
       next_receipt_number: {
         Args: { year_id: string }
