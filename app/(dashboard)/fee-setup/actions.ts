@@ -47,6 +47,11 @@ export async function deleteTransportRoute(id: string) {
     .from('transport_routes')
     .delete()
     .eq('id', id)
-  if (error) throw new Error(error.message)
+  if (error) {
+    if (error.code === '23503') {
+      throw new Error('This route has enrolled students and cannot be deleted.')
+    }
+    throw new Error(error.message)
+  }
   revalidatePath('/fee-setup')
 }

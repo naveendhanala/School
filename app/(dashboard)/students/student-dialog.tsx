@@ -105,7 +105,7 @@ export function StudentDialog({ open, onClose, classes, routes, suggestedAdmNo, 
             mobile: form.mobile.trim(),
             classId: form.classId,
             routeId: form.routeId || null,
-            admNo: form.admNo.trim() || suggestedAdmNo,
+            admNo: form.admNo.trim(),
           })
         }
         onClose()

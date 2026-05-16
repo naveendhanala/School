@@ -1,13 +1,13 @@
 export type PaymentStatus = 'paid' | 'partial' | 'unpaid'
 
-export interface FeeCalcInput {
+export type FeeCalcInput = {
   classFees: { amount: number }[]
   studentFees: { amount: number }[]
   transportFee: number
   payments: { amount: number }[]
 }
 
-export interface FeeCalcResult {
+export type FeeCalcResult = {
   totalFee: number
   totalPaid: number
   balance: number

@@ -122,7 +122,7 @@ export default async function StudentsPage() {
       enrollmentId: e.id,
       ...feeCalc,
     }
-  })
+  }).filter(row => row.isActive)
 
   const { data: classes } = await supabase
     .from('classes')

@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ClassFeesTab } from './class-fees-tab'
 import { TransportTab } from './transport-tab'
@@ -14,10 +15,14 @@ export default function FeeSetupPage() {
           <TabsTrigger value="academic-year">Academic Year</TabsTrigger>
         </TabsList>
         <TabsContent value="class-fees">
-          <ClassFeesTab />
+          <Suspense fallback={<div className="mt-4 p-4 text-sm text-gray-400">Loading class fees…</div>}>
+            <ClassFeesTab />
+          </Suspense>
         </TabsContent>
         <TabsContent value="transport">
-          <TransportTab />
+          <Suspense fallback={<div className="mt-4 p-4 text-sm text-gray-400">Loading transport routes…</div>}>
+            <TransportTab />
+          </Suspense>
         </TabsContent>
         <TabsContent value="academic-year">
           <div className="mt-4 p-4 bg-gray-50 rounded border text-gray-500 text-sm">
