@@ -22,6 +22,10 @@ test('shows error for invalid credentials', async ({ page }) => {
 })
 
 test('authenticated user is redirected away from login page', async ({ page }) => {
+  if (!process.env.TEST_USER_EMAIL) {
+    test.skip(true, 'TEST_USER_EMAIL not configured — skipping auth test')
+    return
+  }
   // Log in first
   await page.goto('/login')
   await page.getByLabel('Email').fill(process.env.TEST_USER_EMAIL ?? '')

@@ -151,6 +151,10 @@ DECLARE
 BEGIN
   SELECT label INTO year_label FROM academic_years WHERE id = year_id;
 
+  IF year_label IS NULL THEN
+    RAISE EXCEPTION 'Academic year % not found', year_id;
+  END IF;
+
   INSERT INTO receipt_sequences (academic_year_id, last_number)
   VALUES (year_id, 1)
   ON CONFLICT (academic_year_id)
@@ -182,7 +186,8 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 CREATE OR REPLACE FUNCTION get_user_role()
 RETURNS TEXT AS $$
   SELECT role FROM profiles WHERE id = auth.uid()
-$$ LANGUAGE sql SECURITY DEFINER STABLE;
+$$ LANGUAGE sql SECURITY DEFINER STABLE
+SET search_path = public;
 
 -- Classes: all authenticated users can read (fixed list)
 CREATE POLICY "auth_read_classes" ON classes FOR SELECT TO authenticated USING (true);
