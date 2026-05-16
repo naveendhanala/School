@@ -1,8 +1,57 @@
-export default function BankDepositsPage() {
+import { createClient } from '@/lib/supabase/server'
+import { BankDepositsClient } from './bank-deposits-client'
+
+export type DepositRow = {
+  id: string
+  bankName: string
+  accountNo: string
+  amount: number
+  depositDate: string
+  reference: string | null
+  remarks: string | null
+  createdAt: string
+}
+
+export default async function BankDepositsPage() {
+  const supabase = await createClient()
+
+  const { data: activeYear } = await supabase
+    .from('academic_years')
+    .select('id, label')
+    .eq('is_active', true)
+    .maybeSingle()
+
+  if (!activeYear) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold text-gray-900">Bank Deposits</h1>
+        <p className="mt-2 text-gray-500">No active academic year. Set one up in Fee Setup.</p>
+      </div>
+    )
+  }
+
+  const { data: depositsRaw } = await supabase
+    .from('bank_deposits')
+    .select('id, bank_name, account_no, amount, deposit_date, reference, remarks, created_at')
+    .eq('academic_year_id', activeYear.id)
+    .order('deposit_date', { ascending: false })
+    .order('created_at', { ascending: false })
+
+  const deposits: DepositRow[] = (depositsRaw ?? []).map(d => ({
+    id: d.id,
+    bankName: d.bank_name,
+    accountNo: d.account_no,
+    amount: Number(d.amount),
+    depositDate: d.deposit_date,
+    reference: d.reference,
+    remarks: d.remarks,
+    createdAt: d.created_at,
+  }))
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-900">Bank Deposits</h1>
-      <p className="text-gray-500 mt-1">Coming soon</p>
-    </div>
+    <BankDepositsClient
+      deposits={deposits}
+      activeYearLabel={activeYear.label}
+    />
   )
 }
