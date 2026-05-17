@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ClassFeesTab } from './class-fees-tab'
 import { TransportTab } from './transport-tab'
 import { AcademicYearTab } from './academic-year-tab'
+import { FeeReferenceTab } from './fee-reference-tab'
 
 export default function FeeSetupPage() {
   return (
@@ -14,6 +15,7 @@ export default function FeeSetupPage() {
           <TabsTrigger value="class-fees">Class Fees</TabsTrigger>
           <TabsTrigger value="transport">Transport Routes</TabsTrigger>
           <TabsTrigger value="academic-year">Academic Year</TabsTrigger>
+          <TabsTrigger value="fee-reference">Fee Reference</TabsTrigger>
         </TabsList>
         <TabsContent value="class-fees">
           <Suspense fallback={<div className="mt-4 p-4 text-sm text-gray-400">Loading class fees…</div>}>
@@ -28,6 +30,11 @@ export default function FeeSetupPage() {
         <TabsContent value="academic-year">
           <Suspense fallback={<div className="mt-4 p-4 text-sm text-gray-400">Loading…</div>}>
             <AcademicYearTab />
+          </Suspense>
+        </TabsContent>
+        <TabsContent value="fee-reference">
+          <Suspense fallback={<div className="mt-4 p-4 text-sm text-gray-400">Loading fee reference…</div>}>
+            <FeeReferenceTab />
           </Suspense>
         </TabsContent>
       </Tabs>
