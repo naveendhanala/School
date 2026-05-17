@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/layout/sidebar'
+import { UserProvider } from '@/lib/user-context'
 import type { Role } from '@/lib/types'
 
 function isRole(r: string): r is Role {
@@ -25,11 +26,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!isRole(profile.role)) return redirect('/login')
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar role={profile.role} userName={profile.name} />
-      <main className="flex-1 overflow-y-auto">
-        {children}
-      </main>
-    </div>
+    <UserProvider name={profile.name} role={profile.role}>
+      <div className="flex min-h-screen bg-gray-50">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto">
+          {children}
+        </main>
+      </div>
+    </UserProvider>
   )
 }

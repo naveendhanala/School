@@ -14,6 +14,7 @@ import {
   LogOut,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useUser } from '@/lib/user-context'
 import type { Role } from '@/lib/types'
 
 const NAV_ITEMS = [
@@ -27,12 +28,14 @@ const NAV_ITEMS = [
   { href: '/fee-setup',    label: 'Fee Setup',     icon: Settings,        roles: ['admin'] },
 ] as const
 
-interface SidebarProps {
-  role: Role
-  userName: string
+const ROLE_BADGE: Record<Role, string> = {
+  admin:      'bg-blue-100 text-blue-700',
+  accountant: 'bg-green-100 text-green-700',
+  cashier:    'bg-gray-100 text-gray-600',
 }
 
-export function Sidebar({ role, userName }: SidebarProps) {
+export function Sidebar() {
+  const { name, role } = useUser()
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -56,7 +59,6 @@ export function Sidebar({ role, userName }: SidebarProps) {
         <h1 className="text-sm font-semibold text-gray-900 leading-snug">
           Rama School of Excellence
         </h1>
-        <p className="text-xs text-gray-500 mt-0.5 capitalize">{role}</p>
       </div>
 
       <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
@@ -83,7 +85,15 @@ export function Sidebar({ role, userName }: SidebarProps) {
       </nav>
 
       <div className="p-4 border-t border-gray-200">
-        <p className="text-sm font-medium text-gray-900 truncate">{userName}</p>
+        <div className="flex items-center gap-2 min-w-0">
+          <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
+          <span className={cn(
+            'shrink-0 rounded-full px-2 py-0.5 text-xs font-medium capitalize',
+            ROLE_BADGE[role]
+          )}>
+            {role}
+          </span>
+        </div>
         <button
           onClick={handleSignOut}
           className="mt-2 flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
