@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
+import { useUser } from '@/lib/user-context'
 import { useRouter } from 'next/navigation'
 import { toCsv } from '@/lib/utils/csv'
 import { formatCurrency } from '@/lib/utils/currency'
@@ -46,6 +47,8 @@ export function BridgeCourseClient({
   const [statusFilter, setStatusFilter] = useState('all')
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deletingDepositId, setDeletingDepositId] = useState<string | null>(null)
+  const { role } = useUser()
+  const canWrite = role !== 'cashier'
 
   const filtered = useMemo(() => {
     return students.filter(s => {
@@ -107,10 +110,12 @@ export function BridgeCourseClient({
           <h1 className="text-2xl font-bold text-gray-900">Bridge Course</h1>
           <p className="mt-1 text-sm text-gray-500">Academic Year: {activeYearLabel}</p>
         </div>
-        <Button onClick={() => setAddStudentOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Student
-        </Button>
+        {canWrite && (
+          <Button onClick={() => setAddStudentOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Student
+          </Button>
+        )}
       </div>
 
       {/* Summary cards */}
@@ -225,7 +230,7 @@ export function BridgeCourseClient({
                   </td>
                   <td className="px-3 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      {s.status !== 'paid' && (
+                      {canWrite && s.status !== 'paid' && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -235,14 +240,16 @@ export function BridgeCourseClient({
                           Pay
                         </Button>
                       )}
-                      <button
-                        onClick={() => handleDeleteStudent(s.id, s.name)}
-                        disabled={isPending && deletingId === s.id}
-                        className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
-                        aria-label="Delete student"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      {canWrite && (
+                        <button
+                          onClick={() => handleDeleteStudent(s.id, s.name)}
+                          disabled={isPending && deletingId === s.id}
+                          className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                          aria-label="Delete student"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -262,15 +269,17 @@ export function BridgeCourseClient({
               <span className="font-medium text-blue-600">{formatCurrency(totalDeposited)}</span>
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setDepositDialogOpen(true)}
-            className="gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Add Deposit
-          </Button>
+          {canWrite && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDepositDialogOpen(true)}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Deposit
+            </Button>
+          )}
         </div>
 
         {deposits.length === 0 ? (
@@ -297,14 +306,16 @@ export function BridgeCourseClient({
                     </td>
                     <td className="px-4 py-3 text-gray-500">{d.reference ?? '—'}</td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => handleDeleteDeposit(d.id)}
-                        disabled={isPending && deletingDepositId === d.id}
-                        className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
-                        aria-label="Delete deposit"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      {canWrite && (
+                        <button
+                          onClick={() => handleDeleteDeposit(d.id)}
+                          disabled={isPending && deletingDepositId === d.id}
+                          className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                          aria-label="Delete deposit"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
