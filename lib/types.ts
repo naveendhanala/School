@@ -74,6 +74,26 @@ export type Payment = {
   created_by: string | null
 }
 
+export type PaymentEdit = {
+  id: string
+  payment_id: string
+  edited_by: string
+  edited_at: string
+  reason: string
+  old_amount: number | null
+  new_amount: number | null
+  old_mode: string | null
+  new_mode: string | null
+  old_payment_date: string | null
+  new_payment_date: string | null
+  old_fee_head: string | null
+  new_fee_head: string | null
+  old_reference: string | null
+  new_reference: string | null
+  old_remarks: string | null
+  new_remarks: string | null
+}
+
 export type BankDeposit = {
   id: string
   academic_year_id: string
@@ -187,6 +207,12 @@ export type Database = {
         Update: Partial<Omit<Payment, 'id' | 'created_at'>>
         Relationships: []
       }
+      payment_edits: {
+        Row: PaymentEdit
+        Insert: Omit<PaymentEdit, 'id' | 'edited_at'>
+        Update: never
+        Relationships: []
+      }
       bank_deposits: {
         Row: BankDeposit
         Insert: Omit<BankDeposit, 'id' | 'created_at'>
@@ -227,6 +253,10 @@ export type Database = {
       get_user_role: {
         Args: Record<string, never>
         Returns: string
+      }
+      reset_active_year_payments: {
+        Args: { year_id: string }
+        Returns: void
       }
     }
   }
