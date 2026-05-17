@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { resetActiveYearPayments } from './actions'
+import { toast } from 'sonner'
 
 interface ResetPaymentsButtonProps {
   activeYearId: string
@@ -34,6 +35,7 @@ export function ResetPaymentsButton({ activeYearId, activeYearLabel }: ResetPaym
     startTransition(async () => {
       const result = await resetActiveYearPayments(activeYearId)
       if (result.error) { setError(result.error); return }
+      toast.success(`All payment data reset for ${activeYearLabel}`)
       handleClose()
       router.refresh()
     })
