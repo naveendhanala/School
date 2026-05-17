@@ -83,6 +83,24 @@ export function DashboardClient({ data }: DashboardClientProps) {
         />
       </div>
 
+      {/* Undeposited warning banner */}
+      {data.totalCollected > 0 && (
+        data.undepositedAmount > 0 ? (
+          <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
+            <span className="text-amber-800">
+              <span className="font-semibold">{formatCurrency(data.undepositedAmount)}</span> collected but not yet deposited to bank.
+            </span>
+            <a href="/bank-deposits" className="font-medium text-amber-700 underline hover:text-amber-900">
+              Record deposit →
+            </a>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            All collections deposited. Accounts balanced.
+          </div>
+        )
+      )}
+
       {/* Charts row */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Class-wise bar chart */}

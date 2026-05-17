@@ -37,6 +37,7 @@ export type DashboardData = {
   classStats: ClassStat[]
   routeStats: RouteStat[]
   recentPayments: RecentPayment[]
+  undepositedAmount: number
 }
 
 export default async function DashboardPage() {
@@ -77,6 +78,7 @@ export default async function DashboardPage() {
     { data: studentFees },
     { data: allPayments },
     { data: recentRaw },
+    { data: bankDepositsRaw },
   ] = await Promise.all([
     supabase
       .from('fee_structure')
@@ -112,6 +114,10 @@ export default async function DashboardPage() {
             enrollments: { students: { adm_no: string; name: string } }
           }[],
         },
+    supabase
+      .from('bank_deposits')
+      .select('amount')
+      .eq('academic_year_id', activeYear.id),
   ])
 
   // class_id → { tuition: number, book: number }
@@ -212,6 +218,9 @@ export default async function DashboardPage() {
     }
   })
 
+  const totalDeposited = (bankDepositsRaw ?? []).reduce((s, d) => s + Number(d.amount), 0)
+  const undepositedAmount = totalCollected - totalDeposited
+
   const data: DashboardData = {
     activeYearLabel: activeYear.label,
     totalCollected,
@@ -221,6 +230,7 @@ export default async function DashboardPage() {
     classStats,
     routeStats,
     recentPayments,
+    undepositedAmount,
   }
 
   return <DashboardClient data={data} />
