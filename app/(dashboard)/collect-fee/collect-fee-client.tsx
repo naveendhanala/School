@@ -61,7 +61,7 @@ export function CollectFeeClient({ students }: CollectFeeClientProps) {
           {/* Right: payment history */}
           <div className="rounded-lg border bg-white p-4">
             <h2 className="mb-4 font-semibold text-gray-900">Payment History</h2>
-            <PaymentHistory payments={selected.payments} />
+            <PaymentHistory payments={selected.payments} studentName={selected.name} />
           </div>
         </div>
       )}
