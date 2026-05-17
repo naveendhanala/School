@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ClassFeesTab } from './class-fees-tab'
 import { TransportTab } from './transport-tab'
+import { AcademicYearTab } from './academic-year-tab'
 
 export default function FeeSetupPage() {
   return (
@@ -25,9 +26,9 @@ export default function FeeSetupPage() {
           </Suspense>
         </TabsContent>
         <TabsContent value="academic-year">
-          <div className="mt-4 p-4 bg-gray-50 rounded border text-gray-500 text-sm">
-            Academic year management coming in a future update.
-          </div>
+          <Suspense fallback={<div className="mt-4 p-4 text-sm text-gray-400">Loading…</div>}>
+            <AcademicYearTab />
+          </Suspense>
         </TabsContent>
       </Tabs>
     </div>
