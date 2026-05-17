@@ -27,6 +27,7 @@ interface Props {
 }
 
 const PAGE_SIZE = 20
+const ALL = '_all'
 
 const STATUS_BADGE: Record<string, string> = {
   paid: 'bg-green-100 text-green-800',
@@ -35,10 +36,10 @@ const STATUS_BADGE: Record<string, string> = {
 }
 
 export function StudentsClient({ rows, classes, routes, activeYearLabel, suggestedAdmNo }: Props) {
-  const [filterClass, setFilterClass] = useState('')
-  const [filterRoute, setFilterRoute] = useState('')
-  const [filterStatus, setFilterStatus] = useState('')
-  const [filterGender, setFilterGender] = useState('')
+  const [filterClass, setFilterClass] = useState(ALL)
+  const [filterRoute, setFilterRoute] = useState(ALL)
+  const [filterStatus, setFilterStatus] = useState(ALL)
+  const [filterGender, setFilterGender] = useState(ALL)
   const [page, setPage] = useState(1)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<StudentRow | null>(null)
@@ -48,10 +49,10 @@ export function StudentsClient({ rows, classes, routes, activeYearLabel, suggest
   const canWrite = role !== 'cashier'
 
   const filtered = useMemo(() => rows.filter(r => {
-    if (filterClass && r.classId !== filterClass) return false
-    if (filterRoute && (r.routeId ?? '') !== filterRoute) return false
-    if (filterStatus && r.status !== filterStatus) return false
-    if (filterGender && r.gender !== filterGender) return false
+    if (filterClass !== ALL && r.classId !== filterClass) return false
+    if (filterRoute !== ALL && (r.routeId ?? ALL) !== filterRoute) return false
+    if (filterStatus !== ALL && r.status !== filterStatus) return false
+    if (filterGender !== ALL && r.gender !== filterGender) return false
     return true
   }), [rows, filterClass, filterRoute, filterStatus, filterGender])
 
@@ -121,7 +122,7 @@ export function StudentsClient({ rows, classes, routes, activeYearLabel, suggest
             <SelectValue placeholder="All Classes" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Classes</SelectItem>
+            <SelectItem value={ALL}>All Classes</SelectItem>
             {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -131,7 +132,7 @@ export function StudentsClient({ rows, classes, routes, activeYearLabel, suggest
             <SelectValue placeholder="All Routes" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Routes</SelectItem>
+            <SelectItem value={ALL}>All Routes</SelectItem>
             {routes.map(r => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -141,7 +142,7 @@ export function StudentsClient({ rows, classes, routes, activeYearLabel, suggest
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Statuses</SelectItem>
+            <SelectItem value={ALL}>All Statuses</SelectItem>
             <SelectItem value="paid">Paid</SelectItem>
             <SelectItem value="partial">Partial</SelectItem>
             <SelectItem value="unpaid">Unpaid</SelectItem>
@@ -153,7 +154,7 @@ export function StudentsClient({ rows, classes, routes, activeYearLabel, suggest
             <SelectValue placeholder="All Genders" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Genders</SelectItem>
+            <SelectItem value={ALL}>All Genders</SelectItem>
             <SelectItem value="male">Male</SelectItem>
             <SelectItem value="female">Female</SelectItem>
           </SelectContent>

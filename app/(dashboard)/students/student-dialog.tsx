@@ -52,6 +52,8 @@ interface FormState {
   routeId: string
 }
 
+const ROUTE_NONE = '_none'
+
 function initialForm(editData?: EditData): FormState {
   return {
     admNo: editData?.admNo ?? '',
@@ -60,7 +62,7 @@ function initialForm(editData?: EditData): FormState {
     village: editData?.village ?? '',
     mobile: editData?.mobile ?? '',
     classId: editData?.classId ?? '',
-    routeId: editData?.routeId ?? '',
+    routeId: editData?.routeId ?? ROUTE_NONE,
   }
 }
 
@@ -96,7 +98,7 @@ export function StudentDialog({ open, onClose, classes, routes, suggestedAdmNo, 
             village: form.village.trim(),
             mobile: form.mobile.trim(),
             classId: form.classId,
-            routeId: form.routeId || null,
+            routeId: form.routeId === ROUTE_NONE ? null : form.routeId,
           })
           toast.success('Student updated')
         } else {
@@ -106,7 +108,7 @@ export function StudentDialog({ open, onClose, classes, routes, suggestedAdmNo, 
             village: form.village.trim(),
             mobile: form.mobile.trim(),
             classId: form.classId,
-            routeId: form.routeId || null,
+            routeId: form.routeId === ROUTE_NONE ? null : form.routeId,
             admNo: form.admNo.trim(),
           })
           toast.success('Student added')
@@ -183,7 +185,7 @@ export function StudentDialog({ open, onClose, classes, routes, suggestedAdmNo, 
                 <SelectValue placeholder="None (own transport)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value={ROUTE_NONE}>None</SelectItem>
                 {routes.map(r => (
                   <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
                 ))}
