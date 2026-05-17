@@ -89,3 +89,17 @@ export async function setActiveYear(id: string): Promise<{ error?: string }> {
   revalidatePath('/bridge-course')
   return {}
 }
+
+export async function resetActiveYearPayments(yearId: string): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('reset_active_year_payments', { year_id: yearId })
+  if (error) return { error: error.message }
+  revalidatePath('/')
+  revalidatePath('/collect-fee')
+  revalidatePath('/pending-fees')
+  revalidatePath('/reports')
+  revalidatePath('/bank-deposits')
+  revalidatePath('/bridge-course')
+  revalidatePath('/fee-setup')
+  return {}
+}
