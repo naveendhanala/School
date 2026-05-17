@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { addBridgeDeposit } from './actions'
+import { toast } from 'sonner'
 
 interface BridgeDepositDialogProps {
   open: boolean
@@ -44,6 +45,7 @@ export function BridgeDepositDialog({ open, onOpenChange }: BridgeDepositDialogP
         reference: form.reference.trim() || null,
       })
       if (result.error) { setError(result.error); return }
+      toast.success('Deposit recorded')
       reset()
       onOpenChange(false)
       router.refresh()

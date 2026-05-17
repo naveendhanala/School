@@ -12,6 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { addBridgeStudent } from './actions'
+import { toast } from 'sonner'
 
 interface AddStudentDialogProps {
   open: boolean
@@ -50,6 +51,7 @@ export function AddStudentDialog({ open, onOpenChange }: AddStudentDialogProps) 
         totalFee: parsedFee,
       })
       if (result.error) { setError(result.error); return }
+      toast.success('Student added')
       reset()
       onOpenChange(false)
       router.refresh()

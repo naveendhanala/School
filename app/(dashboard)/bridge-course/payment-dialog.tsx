@@ -12,6 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { recordBridgePayment } from './actions'
+import { toast } from 'sonner'
 import type { BridgePaymentMode } from '@/lib/types'
 
 interface PaymentDialogProps {
@@ -42,6 +43,7 @@ export function PaymentDialog({ open, onOpenChange, studentId, studentName }: Pa
     startTransition(async () => {
       const result = await recordBridgePayment({ studentId, mode, amount: parsedAmount })
       if (result.error) { setError(result.error); return }
+      toast.success('Payment recorded')
       reset()
       onOpenChange(false)
       router.refresh()
