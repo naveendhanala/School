@@ -10,6 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { Download, Plus, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { deleteBridgeStudent, deleteBridgeDeposit } from './actions'
 import { AddStudentDialog } from './add-student-dialog'
 import { PaymentDialog } from './payment-dialog'
@@ -69,7 +70,8 @@ export function BridgeCourseClient({
     startTransition(async () => {
       const result = await deleteBridgeStudent(id)
       setDeletingId(null)
-      if (result.error) { alert(`Delete failed: ${result.error}`); return }
+      if (result.error) { toast.error(`Delete failed: ${result.error}`); return }
+      toast.success('Student deleted')
       router.refresh()
     })
   }
@@ -80,7 +82,8 @@ export function BridgeCourseClient({
     startTransition(async () => {
       const result = await deleteBridgeDeposit(id)
       setDeletingDepositId(null)
-      if (result.error) { alert(`Delete failed: ${result.error}`); return }
+      if (result.error) { toast.error(`Delete failed: ${result.error}`); return }
+      toast.success('Deposit deleted')
       router.refresh()
     })
   }
