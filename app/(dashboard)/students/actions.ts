@@ -111,3 +111,30 @@ export async function deactivateStudent(studentId: string) {
   if (error) throw new Error(error.message)
   revalidatePath('/students')
 }
+
+export async function getStudentPaymentHistory(enrollmentId: string): Promise<{
+  id: string
+  receiptNo: string
+  paymentDate: string
+  feeHead: string
+  mode: string
+  amount: number
+  reference: string | null
+}[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('payments')
+    .select('id, receipt_no, payment_date, fee_head, mode, amount, reference')
+    .eq('enrollment_id', enrollmentId)
+    .order('payment_date', { ascending: false })
+    .order('created_at', { ascending: false })
+  return (data ?? []).map(p => ({
+    id: p.id,
+    receiptNo: p.receipt_no,
+    paymentDate: p.payment_date,
+    feeHead: p.fee_head,
+    mode: p.mode,
+    amount: Number(p.amount),
+    reference: p.reference,
+  }))
+}

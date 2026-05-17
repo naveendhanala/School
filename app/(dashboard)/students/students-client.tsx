@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { StudentDialog } from './student-dialog'
+import { StudentDetailModal } from './student-detail-modal'
 import { deactivateStudent } from './actions'
 import { toast } from 'sonner'
 import { toCsv } from '@/lib/utils/csv'
@@ -41,6 +42,7 @@ export function StudentsClient({ rows, classes, routes, activeYearLabel, suggest
   const [page, setPage] = useState(1)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<StudentRow | null>(null)
+  const [viewTarget, setViewTarget] = useState<StudentRow | null>(null)
   const [, startTransition] = useTransition()
   const { role } = useUser()
   const canWrite = role !== 'cashier'
@@ -181,7 +183,14 @@ export function StudentsClient({ rows, classes, routes, activeYearLabel, suggest
             ) : paginated.map(row => (
               <tr key={row.id} className="border-t hover:bg-gray-50">
                 <td className="px-3 py-2 text-gray-500">{row.admNo}</td>
-                <td className="px-3 py-2 font-medium">{row.name}</td>
+                <td className="px-3 py-2 font-medium">
+                  <button
+                    onClick={() => setViewTarget(row)}
+                    className="hover:underline text-left"
+                  >
+                    {row.name}
+                  </button>
+                </td>
                 <td className="px-3 py-2">{row.className}</td>
                 <td className="px-3 py-2">{row.routeName ?? '—'}</td>
                 <td className="px-3 py-2">{row.village ?? '—'}</td>
@@ -264,6 +273,10 @@ export function StudentsClient({ rows, classes, routes, activeYearLabel, suggest
           routeId: editTarget.routeId,
           admNo: editTarget.admNo,
         } : undefined}
+      />
+      <StudentDetailModal
+        student={viewTarget}
+        onClose={() => setViewTarget(null)}
       />
     </div>
   )
