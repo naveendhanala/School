@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { recordPayment } from './actions'
+import { toast } from 'sonner'
 import { formatCurrency } from '@/lib/utils/currency'
 import type { FeeHead, PaymentMode } from '@/lib/types'
 import type { CollectFeeStudent } from './page'
@@ -97,6 +98,7 @@ export function PaymentForm({ student, onSuccess }: PaymentFormProps) {
       setFeeHead('tuition')
       setMode('cash')
       setPaymentDate(todayIso())
+      toast.success('Payment recorded')
       onSuccess(result.paymentId)
     })
   }
