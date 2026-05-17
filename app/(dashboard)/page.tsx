@@ -24,6 +24,8 @@ export type RecentPayment = {
   amount: number
   mode: string
   paymentDate: string
+  reference: string | null
+  remarks: string | null
 }
 
 export type DashboardData = {
@@ -96,7 +98,7 @@ export default async function DashboardPage() {
       ? supabase
           .from('payments')
           .select(`
-            id, receipt_no, fee_head, amount, mode, payment_date,
+            id, receipt_no, fee_head, amount, mode, payment_date, reference, remarks,
             enrollments!inner ( students!inner ( adm_no, name ) )
           `)
           .in('enrollment_id', enrollmentIds)
@@ -106,7 +108,7 @@ export default async function DashboardPage() {
       : {
           data: [] as {
             id: string; receipt_no: string; fee_head: string; amount: number
-            mode: string; payment_date: string
+            mode: string; payment_date: string; reference: string | null; remarks: string | null
             enrollments: { students: { adm_no: string; name: string } }
           }[],
         },
@@ -205,6 +207,8 @@ export default async function DashboardPage() {
       amount: Number(p.amount),
       mode: p.mode,
       paymentDate: p.payment_date,
+      reference: p.reference,
+      remarks: p.remarks,
     }
   })
 

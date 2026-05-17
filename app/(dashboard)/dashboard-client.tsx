@@ -1,11 +1,17 @@
 'use client'
 
+import { useState } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
   PieChart, Pie, Cell, ResponsiveContainer,
 } from 'recharts'
+import { Pencil } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils/currency'
+import { useUser } from '@/lib/user-context'
+import { EditPaymentDialog } from '@/components/payments/edit-payment-dialog'
+import type { EditPaymentTarget } from '@/components/payments/edit-payment-dialog'
 import type { DashboardData } from './page'
+import type { FeeHead, PaymentMode } from '@/lib/types'
 
 const PIE_COLORS = [
   '#4f46e5', '#16a34a', '#dc2626', '#d97706',
@@ -42,6 +48,10 @@ interface DashboardClientProps {
 }
 
 export function DashboardClient({ data }: DashboardClientProps) {
+  const { role } = useUser()
+  const isAdmin = role === 'admin'
+  const [editTarget, setEditTarget] = useState<EditPaymentTarget | null>(null)
+
   return (
     <div className="space-y-6 p-6">
       <div>
@@ -154,6 +164,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
                   <th scope="col" className="px-4 py-3 text-left font-medium">Mode</th>
                   <th scope="col" className="px-4 py-3 text-left font-medium">Date</th>
                   <th scope="col" className="px-4 py-3 text-right font-medium">Amount</th>
+                  {isAdmin && <th scope="col" className="px-4 py-3" />}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -170,6 +181,27 @@ export function DashboardClient({ data }: DashboardClientProps) {
                     <td className="px-4 py-3 text-right font-semibold text-green-600">
                       {formatCurrency(p.amount)}
                     </td>
+                    {isAdmin && (
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => setEditTarget({
+                            id: p.id,
+                            receiptNo: p.receiptNo,
+                            studentName: p.studentName,
+                            amount: p.amount,
+                            mode: p.mode as PaymentMode,
+                            paymentDate: p.paymentDate,
+                            feeHead: p.feeHead as FeeHead,
+                            reference: p.reference,
+                            remarks: p.remarks,
+                          })}
+                          className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                          aria-label="Edit payment"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -177,6 +209,14 @@ export function DashboardClient({ data }: DashboardClientProps) {
           </div>
         )}
       </div>
+
+      {editTarget && (
+        <EditPaymentDialog
+          payment={editTarget}
+          open={editTarget !== null}
+          onOpenChange={open => { if (!open) setEditTarget(null) }}
+        />
+      )}
     </div>
   )
 }
