@@ -7,6 +7,8 @@ export type PendingRow = {
   enrollmentId: string
   admNo: string
   name: string
+  mobile: string | null
+  village: string | null
   className: string
   classId: string
   routeName: string | null
@@ -40,7 +42,7 @@ export default async function PendingFeesPage() {
       id,
       class_id,
       route_id,
-      students!inner ( adm_no, name, is_active ),
+      students!inner ( adm_no, name, is_active, mobile, village ),
       classes!inner ( name ),
       transport_routes ( name, fee_amount )
     `)
@@ -100,7 +102,7 @@ export default async function PendingFeesPage() {
       return student.is_active
     })
     .map(e => {
-      const student = e.students as unknown as { adm_no: string; name: string }
+      const student = e.students as unknown as { adm_no: string; name: string; mobile: string | null; village: string | null }
       const cls = e.classes as unknown as { name: string }
       const route = e.transport_routes as unknown as { name: string; fee_amount: number } | null
 
@@ -120,6 +122,8 @@ export default async function PendingFeesPage() {
         enrollmentId: e.id,
         admNo: student.adm_no,
         name: student.name,
+        mobile: student.mobile,
+        village: student.village,
         className: cls.name,
         classId: e.class_id,
         routeName: route?.name ?? null,

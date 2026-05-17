@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { toCsv } from '@/lib/utils/csv'
 import { formatCurrency } from '@/lib/utils/currency'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -11,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Download } from 'lucide-react'
+import { Download, Printer } from 'lucide-react'
 import type { PendingRow } from './page'
 
 type SortKey = 'balance_desc' | 'balance_asc' | 'name_asc'
@@ -29,12 +30,19 @@ export function PendingFeesClient({
   routes,
   activeYearLabel,
 }: PendingFeesClientProps) {
+  const [search, setSearch] = useState('')
   const [classFilter, setClassFilter] = useState('all')
   const [routeFilter, setRouteFilter] = useState('all')
   const [sort, setSort] = useState<SortKey>('balance_desc')
 
   const filtered = useMemo(() => {
     let result = rows
+    if (search.trim()) {
+      const q = search.trim().toLowerCase()
+      result = result.filter(r =>
+        r.name.toLowerCase().includes(q) || r.admNo.toLowerCase().includes(q)
+      )
+    }
     if (classFilter !== 'all') result = result.filter(r => r.classId === classFilter)
     if (routeFilter === 'none') result = result.filter(r => r.routeId === null)
     else if (routeFilter !== 'all') result = result.filter(r => r.routeId === routeFilter)
@@ -44,18 +52,20 @@ export function PendingFeesClient({
       if (sort === 'balance_asc') return a.balance - b.balance
       return a.name.localeCompare(b.name)
     })
-  }, [rows, classFilter, routeFilter, sort])
+  }, [rows, search, classFilter, routeFilter, sort])
 
   const totalPending = filtered.reduce((s, r) => s + r.balance, 0)
 
   function handleExport() {
     const csv = toCsv(
-      ['Adm No', 'Name', 'Class', 'Route', 'Total Fee', 'Paid', 'Balance'],
+      ['Adm No', 'Name', 'Class', 'Route', 'Mobile', 'Village', 'Total Fee', 'Paid', 'Balance'],
       filtered.map(r => [
         r.admNo,
         r.name,
         r.className,
         r.routeName ?? '',
+        r.mobile ?? '',
+        r.village ?? '',
         r.totalFee,
         r.totalPaid,
         r.balance,
@@ -71,107 +81,128 @@ export function PendingFeesClient({
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Pending Fees</h1>
-        <p className="mt-1 text-sm text-gray-500">Academic Year: {activeYearLabel}</p>
-      </div>
+    <>
+      <style>{`@media print { .no-print { display: none !important; } }`}</style>
 
-      {/* Stat cards */}
-      <div className="grid max-w-md grid-cols-2 gap-4">
-        <div className="rounded-lg border bg-white p-4">
-          <p className="text-sm text-gray-500">Students Pending</p>
-          <p className="mt-1 text-2xl font-bold text-red-600">{filtered.length}</p>
+      <div className="space-y-6 p-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Pending Fees</h1>
+          <p className="mt-1 text-sm text-gray-500">Academic Year: {activeYearLabel}</p>
         </div>
-        <div className="rounded-lg border bg-white p-4">
-          <p className="text-sm text-gray-500">Total Outstanding</p>
-          <p className="mt-1 text-2xl font-bold text-red-600">{formatCurrency(totalPending)}</p>
+
+        {/* Stat cards */}
+        <div className="no-print grid max-w-md grid-cols-2 gap-4">
+          <div className="rounded-lg border bg-white p-4">
+            <p className="text-sm text-gray-500">Students Pending</p>
+            <p className="mt-1 text-2xl font-bold text-red-600">{filtered.length}</p>
+          </div>
+          <div className="rounded-lg border bg-white p-4">
+            <p className="text-sm text-gray-500">Total Outstanding</p>
+            <p className="mt-1 text-2xl font-bold text-red-600">{formatCurrency(totalPending)}</p>
+          </div>
         </div>
-      </div>
 
-      {/* Filters + export */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Select value={classFilter} onValueChange={setClassFilter}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="All classes" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Classes</SelectItem>
-            {classes.map(c => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Filters + export + print */}
+        <div className="no-print flex flex-wrap items-center gap-3">
+          <Input
+            placeholder="Search name or adm no…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-52"
+          />
 
-        <Select value={routeFilter} onValueChange={setRouteFilter}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="All routes" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Routes</SelectItem>
-            <SelectItem value="none">No Route</SelectItem>
-            {routes.map(r => (
-              <SelectItem key={r.id} value={r.id}>
-                {r.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={sort} onValueChange={v => setSort(v as SortKey)}>
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="balance_desc">Balance: High to Low</SelectItem>
-            <SelectItem value="balance_asc">Balance: Low to High</SelectItem>
-            <SelectItem value="name_asc">Name: A to Z</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Button variant="outline" size="sm" onClick={handleExport} className="ml-auto gap-2">
-          <Download className="h-4 w-4" />
-          Export CSV
-        </Button>
-      </div>
-
-      {/* Table */}
-      {filtered.length === 0 ? (
-        <p className="text-sm text-gray-500">No students with outstanding balance.</p>
-      ) : (
-        <div className="overflow-x-auto rounded-lg border bg-white">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50 text-gray-600">
-              <tr>
-                <th scope="col" className="px-4 py-3 text-left font-medium">Name</th>
-                <th scope="col" className="px-4 py-3 text-left font-medium">Adm No</th>
-                <th scope="col" className="px-4 py-3 text-left font-medium">Class</th>
-                <th scope="col" className="px-4 py-3 text-left font-medium">Route</th>
-                <th scope="col" className="px-4 py-3 text-right font-medium">Total Fee</th>
-                <th scope="col" className="px-4 py-3 text-right font-medium">Paid</th>
-                <th scope="col" className="px-4 py-3 text-right font-medium">Balance</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filtered.map(row => (
-                <tr key={row.enrollmentId} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">{row.name}</td>
-                  <td className="px-4 py-3 text-gray-500">{row.admNo}</td>
-                  <td className="px-4 py-3">{row.className}</td>
-                  <td className="px-4 py-3 text-gray-500">{row.routeName ?? '—'}</td>
-                  <td className="px-4 py-3 text-right">{formatCurrency(row.totalFee)}</td>
-                  <td className="px-4 py-3 text-right text-green-600">{formatCurrency(row.totalPaid)}</td>
-                  <td className="px-4 py-3 text-right font-semibold text-red-600">
-                    {formatCurrency(row.balance)}
-                  </td>
-                </tr>
+          <Select value={classFilter} onValueChange={setClassFilter}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="All classes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Classes</SelectItem>
+              {classes.map(c => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
               ))}
-            </tbody>
-          </table>
+            </SelectContent>
+          </Select>
+
+          <Select value={routeFilter} onValueChange={setRouteFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="All routes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Routes</SelectItem>
+              <SelectItem value="none">No Route</SelectItem>
+              {routes.map(r => (
+                <SelectItem key={r.id} value={r.id}>
+                  {r.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={sort} onValueChange={v => setSort(v as SortKey)}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="balance_desc">Balance: High to Low</SelectItem>
+              <SelectItem value="balance_asc">Balance: Low to High</SelectItem>
+              <SelectItem value="name_asc">Name: A to Z</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <div className="ml-auto flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => window.print()} className="gap-2">
+              <Printer className="h-4 w-4" />
+              Print
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExport} className="gap-2">
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+          </div>
         </div>
-      )}
-    </div>
+
+        {/* Table */}
+        {filtered.length === 0 ? (
+          <p className="text-sm text-gray-500">No students with outstanding balance.</p>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border bg-white">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 text-gray-600">
+                <tr>
+                  <th scope="col" className="px-4 py-3 text-left font-medium">Name</th>
+                  <th scope="col" className="px-4 py-3 text-left font-medium">Adm No</th>
+                  <th scope="col" className="px-4 py-3 text-left font-medium">Class</th>
+                  <th scope="col" className="px-4 py-3 text-left font-medium">Route</th>
+                  <th scope="col" className="px-4 py-3 text-left font-medium">Mobile</th>
+                  <th scope="col" className="px-4 py-3 text-left font-medium">Village</th>
+                  <th scope="col" className="px-4 py-3 text-right font-medium">Total Fee</th>
+                  <th scope="col" className="px-4 py-3 text-right font-medium">Paid</th>
+                  <th scope="col" className="px-4 py-3 text-right font-medium">Balance</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filtered.map(row => (
+                  <tr key={row.enrollmentId} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 font-medium">{row.name}</td>
+                    <td className="px-4 py-3 text-gray-500">{row.admNo}</td>
+                    <td className="px-4 py-3">{row.className}</td>
+                    <td className="px-4 py-3 text-gray-500">{row.routeName ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-500">{row.mobile ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-500">{row.village ?? '—'}</td>
+                    <td className="px-4 py-3 text-right">{formatCurrency(row.totalFee)}</td>
+                    <td className="px-4 py-3 text-right text-green-600">{formatCurrency(row.totalPaid)}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-red-600">
+                      {formatCurrency(row.balance)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </>
   )
 }
