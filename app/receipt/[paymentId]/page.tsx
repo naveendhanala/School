@@ -46,6 +46,12 @@ export default async function ReceiptPage({
 
   if (!payment) notFound()
 
+  const { data: edits } = await supabase
+    .from('payment_edits')
+    .select('edited_at, reason, old_amount, new_amount, old_mode, new_mode, old_payment_date, new_payment_date')
+    .eq('payment_id', paymentId)
+    .order('edited_at', { ascending: false })
+
   const enrollment = payment.enrollments as unknown as {
     students: { adm_no: string; name: string; village: string | null }
     classes: { name: string }
@@ -147,6 +153,27 @@ export default async function ReceiptPage({
         <div className="mt-8 border-t pt-4 text-center text-sm text-gray-500">
           Received with thanks
         </div>
+
+        {edits && edits.length > 0 && (
+          <div className="mt-6 border-t pt-4">
+            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+              Edit History
+            </h2>
+            <div className="space-y-2">
+              {edits.map((e, i) => (
+                <div key={i} className="text-xs text-gray-500">
+                  <span className="font-medium">{new Date(e.edited_at).toLocaleDateString('en-IN')}</span>
+                  {' — '}{e.reason}
+                  {e.old_amount !== null && e.new_amount !== null && e.old_amount !== e.new_amount && (
+                    <span className="ml-1 text-gray-400">
+                      (₹{Number(e.old_amount).toFixed(2)} → ₹{Number(e.new_amount).toFixed(2)})
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <ReceiptActions />
       </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Pencil } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils/currency'
 import { useUser } from '@/lib/user-context'
@@ -62,6 +63,14 @@ export function PaymentHistory({ payments, studentName }: PaymentHistoryProps) {
                 <span className="text-sm font-semibold text-green-600">
                   {formatCurrency(p.amount)}
                 </span>
+                <Link
+                  href={`/receipt/${p.id}`}
+                  target="_blank"
+                  className="rounded p-1 text-xs text-blue-500 hover:text-blue-700"
+                  aria-label="View receipt"
+                >
+                  Receipt
+                </Link>
                 {isAdmin && (
                   <button
                     onClick={() => setEditTarget({

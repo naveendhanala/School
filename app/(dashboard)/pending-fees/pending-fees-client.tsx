@@ -180,6 +180,7 @@ export function PendingFeesClient({
                   <th scope="col" className="px-4 py-3 text-right font-medium">Total Fee</th>
                   <th scope="col" className="px-4 py-3 text-right font-medium">Paid</th>
                   <th scope="col" className="px-4 py-3 text-right font-medium">Balance</th>
+                  <th scope="col" className="px-4 py-3 no-print" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -196,6 +197,20 @@ export function PendingFeesClient({
                     <td className="px-4 py-3 text-right font-semibold text-red-600">
                       {formatCurrency(row.balance)}
                     </td>
+                    {row.mobile ? (
+                      <td className="px-4 py-3 no-print">
+                        <a
+                          href={`https://wa.me/91${row.mobile.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, this is a reminder that ${row.name}'s school fee balance is ₹${row.balance.toLocaleString('en-IN')}. Please arrange payment at the earliest. Thank you.`)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 rounded-md border border-green-300 bg-green-50 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-100"
+                        >
+                          WhatsApp
+                        </a>
+                      </td>
+                    ) : (
+                      <td className="px-4 py-3 no-print" />
+                    )}
                   </tr>
                 ))}
               </tbody>
