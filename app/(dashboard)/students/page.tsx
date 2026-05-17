@@ -40,34 +40,27 @@ export default async function StudentsPage() {
     )
   }
 
-  const { data: enrollmentsRaw } = await supabase
-    .from('enrollments')
-    .select(`
-      id,
-      class_id,
-      route_id,
-      students!inner ( id, adm_no, name, gender, village, mobile, is_active ),
-      classes!inner ( name ),
-      transport_routes ( name, fee_amount )
-    `)
-    .eq('academic_year_id', activeYear.id)
+  const [{ data: enrollmentsRaw }, { data: feeStructure }] = await Promise.all([
+    supabase
+      .from('enrollments')
+      .select(`
+        id,
+        class_id,
+        route_id,
+        students!inner ( id, adm_no, name, gender, village, mobile, is_active ),
+        classes!inner ( name ),
+        transport_routes ( name, fee_amount ),
+        student_fees ( amount ),
+        payments ( amount )
+      `)
+      .eq('academic_year_id', activeYear.id),
+    supabase
+      .from('fee_structure')
+      .select('class_id, amount')
+      .eq('academic_year_id', activeYear.id),
+  ])
 
   const enrollments = enrollmentsRaw ?? []
-  const enrollmentIds = enrollments.map(e => e.id)
-
-  const { data: feeStructure } = await supabase
-    .from('fee_structure')
-    .select('class_id, amount')
-    .eq('academic_year_id', activeYear.id)
-
-  const [{ data: studentFees }, { data: payments }] = await Promise.all([
-    enrollmentIds.length > 0
-      ? supabase.from('student_fees').select('enrollment_id, amount').in('enrollment_id', enrollmentIds)
-      : { data: [] as { enrollment_id: string; amount: number }[] },
-    enrollmentIds.length > 0
-      ? supabase.from('payments').select('enrollment_id, amount').in('enrollment_id', enrollmentIds)
-      : { data: [] as { enrollment_id: string; amount: number }[] },
-  ])
 
   // class_id → [{ amount }]
   const classFeeMap = new Map<string, { amount: number }[]>()
@@ -77,21 +70,6 @@ export default async function StudentsPage() {
     classFeeMap.set(fs.class_id, list)
   }
 
-  // enrollment_id → [{ amount }]
-  const studentFeeMap = new Map<string, { amount: number }[]>()
-  for (const sf of studentFees ?? []) {
-    const list = studentFeeMap.get(sf.enrollment_id) ?? []
-    list.push({ amount: Number(sf.amount) })
-    studentFeeMap.set(sf.enrollment_id, list)
-  }
-
-  const paymentMap = new Map<string, { amount: number }[]>()
-  for (const p of payments ?? []) {
-    const list = paymentMap.get(p.enrollment_id) ?? []
-    list.push({ amount: Number(p.amount) })
-    paymentMap.set(p.enrollment_id, list)
-  }
-
   const rows: StudentRow[] = enrollments.map(e => {
     const student = e.students as unknown as {
       id: string; adm_no: string; name: string; gender: string
@@ -99,12 +77,14 @@ export default async function StudentsPage() {
     }
     const cls = e.classes as unknown as { name: string }
     const route = e.transport_routes as unknown as { name: string; fee_amount: number } | null
+    const sf = (e.student_fees as unknown as { amount: number }[] | null) ?? []
+    const pmt = (e.payments as unknown as { amount: number }[] | null) ?? []
 
     const feeCalc = calcStudentFee({
       classFees: classFeeMap.get(e.class_id) ?? [],
-      studentFees: studentFeeMap.get(e.id) ?? [],
+      studentFees: sf,
       transportFee: route ? Number(route.fee_amount) : 0,
-      payments: paymentMap.get(e.id) ?? [],
+      payments: pmt,
     })
 
     return {

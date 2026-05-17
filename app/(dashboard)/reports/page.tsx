@@ -87,62 +87,43 @@ export default async function ReportsPage() {
     )
   }
 
-  const { data: enrollmentsRaw } = await supabase
-    .from('enrollments')
-    .select(`
-      id,
-      class_id,
-      route_id,
-      students!inner ( is_active ),
-      classes!inner ( name, sort_order ),
-      transport_routes ( name, fee_amount )
-    `)
-    .eq('academic_year_id', activeYear.id)
+  const [{ data: enrollmentsRaw }, { data: paymentsRaw }, { data: depositsRaw }, { data: feeStructure }] =
+    await Promise.all([
+      supabase
+        .from('enrollments')
+        .select(`
+          id,
+          class_id,
+          route_id,
+          students!inner ( is_active ),
+          classes!inner ( name, sort_order ),
+          transport_routes ( name, fee_amount ),
+          student_fees ( amount )
+        `)
+        .eq('academic_year_id', activeYear.id),
+      supabase
+        .from('payments')
+        .select(`
+          id, enrollment_id, receipt_no, fee_head, amount, mode, payment_date, reference,
+          enrollments!inner (
+            students!inner ( adm_no, name ),
+            classes!inner ( name )
+          )
+        `)
+        .eq('enrollments.academic_year_id', activeYear.id)
+        .order('payment_date', { ascending: false })
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('bank_deposits')
+        .select('amount, deposit_date')
+        .eq('academic_year_id', activeYear.id),
+      supabase
+        .from('fee_structure')
+        .select('class_id, fee_head, amount')
+        .eq('academic_year_id', activeYear.id),
+    ])
 
   const enrollments = enrollmentsRaw ?? []
-  const enrollmentIds = enrollments.map(e => e.id)
-
-  const [
-    { data: paymentsRaw },
-    { data: depositsRaw },
-    { data: feeStructure },
-    { data: studentFees },
-  ] = await Promise.all([
-    enrollmentIds.length > 0
-      ? supabase
-          .from('payments')
-          .select(`
-            id, enrollment_id, receipt_no, fee_head, amount, mode, payment_date, reference,
-            enrollments!inner (
-              students!inner ( adm_no, name ),
-              classes!inner ( name )
-            )
-          `)
-          .in('enrollment_id', enrollmentIds)
-          .order('payment_date', { ascending: false })
-          .order('created_at', { ascending: false })
-      : {
-          data: [] as {
-            id: string; enrollment_id: string; receipt_no: string; fee_head: string
-            amount: number; mode: string; payment_date: string; reference: string | null
-            enrollments: { students: { adm_no: string; name: string }; classes: { name: string } }
-          }[],
-        },
-    supabase
-      .from('bank_deposits')
-      .select('amount, deposit_date')
-      .eq('academic_year_id', activeYear.id),
-    supabase
-      .from('fee_structure')
-      .select('class_id, fee_head, amount')
-      .eq('academic_year_id', activeYear.id),
-    enrollmentIds.length > 0
-      ? supabase
-          .from('student_fees')
-          .select('enrollment_id, amount')
-          .in('enrollment_id', enrollmentIds)
-      : { data: [] as { enrollment_id: string; amount: number }[] },
-  ])
 
   // payments list + paymentTotalMap in one pass
   const payments: ReportPayment[] = []
@@ -220,13 +201,6 @@ export default async function ReportsPage() {
     classFeeMap.set(fs.class_id, entry)
   }
 
-  const studentFeeMap = new Map<string, { amount: number }[]>()
-  for (const sf of studentFees ?? []) {
-    const list = studentFeeMap.get(sf.enrollment_id) ?? []
-    list.push({ amount: Number(sf.amount) })
-    studentFeeMap.set(sf.enrollment_id, list)
-  }
-
   const classStatsMap = new Map<string, ClasswiseRow>()
   const routeStatsMap = new Map<string | null, TransportwiseRow>()
 
@@ -236,6 +210,7 @@ export default async function ReportsPage() {
 
     const cls = e.classes as unknown as { name: string; sort_order: number }
     const route = e.transport_routes as unknown as { name: string; fee_amount: number } | null
+    const sf = (e.student_fees as unknown as { amount: number }[] | null) ?? []
 
     const classFees = classFeeMap.get(e.class_id) ?? { tuition: 0, book: 0 }
     const transportFee = route ? Number(route.fee_amount) : 0
@@ -243,7 +218,7 @@ export default async function ReportsPage() {
 
     const feeCalc = calcStudentFee({
       classFees: [{ amount: classFees.tuition }, { amount: classFees.book }].filter(f => f.amount > 0),
-      studentFees: studentFeeMap.get(e.id) ?? [],
+      studentFees: sf,
       transportFee,
       payments: totalPaid > 0 ? [{ amount: totalPaid }] : [],
     })

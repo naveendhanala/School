@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { calcStudentFee } from '@/lib/utils/fee-calc'
-import type { ClassFeeHead, StudentFeeHead } from '@/lib/types'
+import type { ClassFeeHead } from '@/lib/types'
 import { PendingFeesClient } from './pending-fees-client'
 
 export type PendingRow = {
@@ -36,40 +36,30 @@ export default async function PendingFeesPage() {
     )
   }
 
-  const { data: enrollmentsRaw } = await supabase
-    .from('enrollments')
-    .select(`
-      id,
-      class_id,
-      route_id,
-      students!inner ( adm_no, name, is_active, mobile, village ),
-      classes!inner ( name ),
-      transport_routes ( name, fee_amount )
-    `)
-    .eq('academic_year_id', activeYear.id)
+  const [{ data: enrollmentsRaw }, { data: feeStructure }, { data: classes }, { data: routes }] =
+    await Promise.all([
+      supabase
+        .from('enrollments')
+        .select(`
+          id,
+          class_id,
+          route_id,
+          students!inner ( adm_no, name, is_active, mobile, village ),
+          classes!inner ( name ),
+          transport_routes ( name, fee_amount ),
+          student_fees ( fee_head, amount ),
+          payments ( amount )
+        `)
+        .eq('academic_year_id', activeYear.id),
+      supabase
+        .from('fee_structure')
+        .select('class_id, fee_head, amount')
+        .eq('academic_year_id', activeYear.id),
+      supabase.from('classes').select('id, name').order('sort_order'),
+      supabase.from('transport_routes').select('id, name').order('name'),
+    ])
 
   const enrollments = enrollmentsRaw ?? []
-  const enrollmentIds = enrollments.map(e => e.id)
-
-  const { data: feeStructure } = await supabase
-    .from('fee_structure')
-    .select('class_id, fee_head, amount')
-    .eq('academic_year_id', activeYear.id)
-
-  const [{ data: studentFees }, { data: payments }] = await Promise.all([
-    enrollmentIds.length > 0
-      ? supabase
-          .from('student_fees')
-          .select('enrollment_id, fee_head, amount')
-          .in('enrollment_id', enrollmentIds)
-      : { data: [] as { enrollment_id: string; fee_head: string; amount: number }[] },
-    enrollmentIds.length > 0
-      ? supabase
-          .from('payments')
-          .select('enrollment_id, amount')
-          .in('enrollment_id', enrollmentIds)
-      : { data: [] as { enrollment_id: string; amount: number }[] },
-  ])
 
   // class_id → { tuition: number, book: number }
   const classFeeMap = new Map<string, Record<ClassFeeHead, number>>()
@@ -78,23 +68,6 @@ export default async function PendingFeesPage() {
     ;(entry as Record<string, number>)[fs.fee_head] = Number(fs.amount)
     classFeeMap.set(fs.class_id, entry)
   }
-
-  // enrollment_id → per-head student fees
-  const studentFeeMap = new Map<string, Partial<Record<StudentFeeHead, number>>>()
-  for (const sf of studentFees ?? []) {
-    const entry = studentFeeMap.get(sf.enrollment_id) ?? {}
-    ;(entry as Record<string, number>)[sf.fee_head] = Number(sf.amount)
-    studentFeeMap.set(sf.enrollment_id, entry)
-  }
-
-  // enrollment_id → total paid
-  const paymentTotalMap = new Map<string, number>()
-  for (const p of payments ?? []) {
-    paymentTotalMap.set(p.enrollment_id, (paymentTotalMap.get(p.enrollment_id) ?? 0) + Number(p.amount))
-  }
-
-  const { data: classes } = await supabase.from('classes').select('id, name').order('sort_order')
-  const { data: routes } = await supabase.from('transport_routes').select('id, name').order('name')
 
   const rows: PendingRow[] = enrollments
     .filter(e => {
@@ -105,17 +78,17 @@ export default async function PendingFeesPage() {
       const student = e.students as unknown as { adm_no: string; name: string; mobile: string | null; village: string | null }
       const cls = e.classes as unknown as { name: string }
       const route = e.transport_routes as unknown as { name: string; fee_amount: number } | null
+      const sf = (e.student_fees as unknown as { fee_head: string; amount: number }[] | null) ?? []
+      const pmts = (e.payments as unknown as { amount: number }[] | null) ?? []
 
       const classFees = classFeeMap.get(e.class_id) ?? { tuition: 0, book: 0 }
-      const stuFees = studentFeeMap.get(e.id) ?? {}
       const transportFee = route ? Number(route.fee_amount) : 0
-      const totalPaid = paymentTotalMap.get(e.id) ?? 0
 
       const feeCalc = calcStudentFee({
         classFees: [{ amount: classFees.tuition }, { amount: classFees.book }].filter(f => f.amount > 0),
-        studentFees: (Object.values(stuFees) as number[]).map(a => ({ amount: Number(a) })),
+        studentFees: sf.map(s => ({ amount: Number(s.amount) })),
         transportFee,
-        payments: totalPaid > 0 ? [{ amount: totalPaid }] : [],
+        payments: pmts.map(p => ({ amount: Number(p.amount) })),
       })
 
       return {
