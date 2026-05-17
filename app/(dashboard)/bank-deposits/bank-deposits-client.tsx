@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Download, Plus, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { deleteDeposit } from './actions'
 import { DepositDialog } from './deposit-dialog'
 import type { DepositRow } from './page'
@@ -54,10 +55,8 @@ export function BankDepositsClient({ deposits, activeYearLabel }: BankDepositsCl
     startTransition(async () => {
       const result = await deleteDeposit(id)
       setDeletingId(null)
-      if (result.error) {
-        alert(`Delete failed: ${result.error}`)
-        return
-      }
+      if (result.error) { toast.error(`Delete failed: ${result.error}`); return }
+      toast.success('Deposit deleted')
       router.refresh()
     })
   }

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createDeposit } from './actions'
+import { toast } from 'sonner'
 
 interface DepositDialogProps {
   open: boolean
@@ -70,11 +71,8 @@ export function DepositDialog({ open, onOpenChange }: DepositDialogProps) {
         remarks: form.remarks.trim() || null,
       })
 
-      if (result.error) {
-        setError(result.error)
-        return
-      }
-
+      if (result.error) { setError(result.error); return }
+      toast.success('Deposit saved')
       resetForm()
       onOpenChange(false)
       router.refresh()
