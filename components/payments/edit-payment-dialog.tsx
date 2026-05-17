@@ -12,6 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { editPayment, deletePayment } from '@/app/(dashboard)/collect-fee/actions'
+import { toast } from 'sonner'
 import type { FeeHead, PaymentMode } from '@/lib/types'
 
 const FEE_HEADS: { value: FeeHead; label: string }[] = [
@@ -107,6 +108,7 @@ export function EditPaymentDialog({ payment, open, onOpenChange }: EditPaymentDi
         form.reason.trim()
       )
       if (result.error) { setError(result.error); return }
+      toast.success('Payment updated')
       onOpenChange(false)
       router.refresh()
     })
@@ -117,6 +119,7 @@ export function EditPaymentDialog({ payment, open, onOpenChange }: EditPaymentDi
     startTransition(async () => {
       const result = await deletePayment(payment.id)
       if (result.error) { setError(result.error); return }
+      toast.success('Payment deleted')
       onOpenChange(false)
       router.refresh()
     })
