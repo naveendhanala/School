@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useTransition } from 'react'
+import { useUser } from '@/lib/user-context'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -40,6 +41,8 @@ export function StudentsClient({ rows, classes, routes, activeYearLabel, suggest
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<StudentRow | null>(null)
   const [, startTransition] = useTransition()
+  const { role } = useUser()
+  const canWrite = role !== 'cashier'
 
   const filtered = useMemo(() => rows.filter(r => {
     if (filterClass && r.classId !== filterClass) return false
@@ -95,7 +98,9 @@ export function StudentsClient({ rows, classes, routes, activeYearLabel, suggest
           <Button variant="outline" size="sm" onClick={handleExportCsv}>
             Export CSV
           </Button>
-          <Button size="sm" onClick={openAdd}>+ Add Student</Button>
+          {canWrite && (
+            <Button size="sm" onClick={openAdd}>+ Add Student</Button>
+          )}
         </div>
       </div>
 
@@ -182,26 +187,28 @@ export function StudentsClient({ rows, classes, routes, activeYearLabel, suggest
                   </span>
                 </td>
                 <td className="px-3 py-2">
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 px-2 text-xs"
-                      onClick={() => openEdit(row)}
-                    >
-                      Edit
-                    </Button>
-                    {row.isActive && (
+                  {canWrite && (
+                    <div className="flex gap-1">
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleDeactivate(row)}
+                        className="h-7 px-2 text-xs"
+                        onClick={() => openEdit(row)}
                       >
-                        Deactivate
+                        Edit
                       </Button>
-                    )}
-                  </div>
+                      {row.isActive && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => handleDeactivate(row)}
+                        >
+                          Deactivate
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
