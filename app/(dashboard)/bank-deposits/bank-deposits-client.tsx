@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
+import { useUser } from '@/lib/user-context'
 import { useRouter } from 'next/navigation'
 import { toCsv } from '@/lib/utils/csv'
 import { formatCurrency } from '@/lib/utils/currency'
@@ -24,6 +25,8 @@ export function BankDepositsClient({ deposits, activeYearLabel }: BankDepositsCl
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const { role } = useUser()
+  const canWrite = role !== 'cashier'
 
   const filtered = useMemo(() => {
     return deposits.filter(d => {
@@ -87,10 +90,12 @@ export function BankDepositsClient({ deposits, activeYearLabel }: BankDepositsCl
           <h1 className="text-2xl font-bold text-gray-900">Bank Deposits</h1>
           <p className="mt-1 text-sm text-gray-500">Academic Year: {activeYearLabel}</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Deposit
-        </Button>
+        {canWrite && (
+          <Button onClick={() => setDialogOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Deposit
+          </Button>
+        )}
       </div>
 
       {/* Summary cards */}
@@ -183,14 +188,16 @@ export function BankDepositsClient({ deposits, activeYearLabel }: BankDepositsCl
                   <td className="px-4 py-3 text-gray-500">{d.reference ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-500">{d.remarks ?? '—'}</td>
                   <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => handleDelete(d.id, d.bankName)}
-                      disabled={isPending && deletingId === d.id}
-                      className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
-                      aria-label="Delete deposit"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    {canWrite && (
+                      <button
+                        onClick={() => handleDelete(d.id, d.bankName)}
+                        disabled={isPending && deletingId === d.id}
+                        className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                        aria-label="Delete deposit"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
