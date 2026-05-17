@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { createStudent, updateStudent } from './actions'
+import { toast } from 'sonner'
 import type { Gender } from '@/lib/types'
 
 interface EditData {
@@ -97,6 +98,7 @@ export function StudentDialog({ open, onClose, classes, routes, suggestedAdmNo, 
             classId: form.classId,
             routeId: form.routeId || null,
           })
+          toast.success('Student updated')
         } else {
           await createStudent({
             name: form.name.trim(),
@@ -107,6 +109,7 @@ export function StudentDialog({ open, onClose, classes, routes, suggestedAdmNo, 
             routeId: form.routeId || null,
             admNo: form.admNo.trim(),
           })
+          toast.success('Student added')
         }
         onClose()
       } catch (e) {

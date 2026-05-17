@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select'
 import { StudentDialog } from './student-dialog'
 import { deactivateStudent } from './actions'
+import { toast } from 'sonner'
 import { toCsv } from '@/lib/utils/csv'
 import type { Gender } from '@/lib/types'
 import type { StudentRow } from './page'
@@ -62,7 +63,14 @@ export function StudentsClient({ rows, classes, routes, activeYearLabel, suggest
 
   const handleDeactivate = (row: StudentRow) => {
     if (!confirm(`Deactivate "${row.name}"? They will be hidden from active lists.`)) return
-    startTransition(async () => { await deactivateStudent(row.id) })
+    startTransition(async () => {
+      try {
+        await deactivateStudent(row.id)
+        toast.success(`${row.name} deactivated`)
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : 'Failed to deactivate student')
+      }
+    })
   }
 
   const handleExportCsv = () => {
