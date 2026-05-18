@@ -12,21 +12,12 @@ import { EditPaymentDialog } from '@/components/payments/edit-payment-dialog'
 import type { EditPaymentTarget } from '@/components/payments/edit-payment-dialog'
 import type { DashboardData } from './page'
 import type { FeeHead, PaymentMode } from '@/lib/types'
+import { HEAD_LABELS, MODE_LABELS } from '@/lib/constants/labels'
 
 const PIE_COLORS = [
   '#4f46e5', '#16a34a', '#dc2626', '#d97706',
   '#0891b2', '#7c3aed', '#db2777', '#65a30d',
 ]
-
-const HEAD_LABELS: Record<string, string> = {
-  tuition: 'Tuition', book: 'Book', transport: 'Transport',
-  hostel: 'Hostel', admission: 'Admission', uniform: 'Uniform',
-  exam: 'Exam', other: 'Other',
-}
-const MODE_LABELS: Record<string, string> = {
-  cash: 'Cash', upi: 'UPI', cheque: 'Cheque',
-  neft_rtgs: 'NEFT/RTGS', demand_draft: 'DD',
-}
 
 interface StatCardProps {
   title: string

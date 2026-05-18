@@ -9,6 +9,7 @@ import { Download } from 'lucide-react'
 import type {
   ReportsData, MonthStat, ClasswiseRow, TransportwiseRow, ReconciliationRow,
 } from './page'
+import { HEAD_LABELS, MODE_LABELS } from '@/lib/constants/labels'
 
 type Tab = 'daily' | 'monthly' | 'reconciliation' | 'classwise' | 'transportwise'
 
@@ -19,16 +20,6 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'classwise', label: 'Class-wise' },
   { key: 'transportwise', label: 'Transport-wise' },
 ]
-
-const HEAD_LABELS: Record<string, string> = {
-  tuition: 'Tuition', book: 'Book', transport: 'Transport',
-  hostel: 'Hostel', admission: 'Admission', uniform: 'Uniform',
-  exam: 'Exam', other: 'Other',
-}
-const MODE_LABELS: Record<string, string> = {
-  cash: 'Cash', upi: 'UPI', cheque: 'Cheque',
-  neft_rtgs: 'NEFT/RTGS', demand_draft: 'DD',
-}
 
 function downloadCsv(csv: string, filename: string) {
   const blob = new Blob([csv], { type: 'text/csv' })

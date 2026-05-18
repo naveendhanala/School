@@ -8,25 +8,7 @@ import { useUser } from '@/lib/user-context'
 import { EditPaymentDialog } from '@/components/payments/edit-payment-dialog'
 import type { EditPaymentTarget } from '@/components/payments/edit-payment-dialog'
 import type { PaymentRecord } from './page'
-
-const MODE_LABELS: Record<string, string> = {
-  cash: 'Cash',
-  upi: 'UPI',
-  cheque: 'Cheque',
-  neft_rtgs: 'NEFT/RTGS',
-  demand_draft: 'DD',
-}
-
-const HEAD_LABELS: Record<string, string> = {
-  tuition: 'Tuition',
-  book: 'Book',
-  transport: 'Transport',
-  hostel: 'Hostel',
-  admission: 'Admission',
-  uniform: 'Uniform',
-  exam: 'Exam',
-  other: 'Other',
-}
+import { HEAD_LABELS, MODE_LABELS } from '@/lib/constants/labels'
 
 interface PaymentHistoryProps {
   payments: PaymentRecord[]
