@@ -30,12 +30,18 @@ export default async function BankDepositsPage() {
     )
   }
 
-  const { data: depositsRaw } = await supabase
-    .from('bank_deposits')
-    .select('id, bank_name, account_no, amount, deposit_date, reference, remarks, created_at')
-    .eq('academic_year_id', activeYear.id)
-    .order('deposit_date', { ascending: false })
-    .order('created_at', { ascending: false })
+  const [{ data: depositsRaw }, { data: paymentsRaw }] = await Promise.all([
+    supabase
+      .from('bank_deposits')
+      .select('id, bank_name, account_no, amount, deposit_date, reference, remarks, created_at')
+      .eq('academic_year_id', activeYear.id)
+      .order('deposit_date', { ascending: false })
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('payments')
+      .select('amount, enrollments!inner(academic_year_id)')
+      .eq('enrollments.academic_year_id', activeYear.id),
+  ])
 
   const deposits: DepositRow[] = (depositsRaw ?? []).map(d => ({
     id: d.id,
@@ -48,10 +54,15 @@ export default async function BankDepositsPage() {
     createdAt: d.created_at,
   }))
 
+  const totalCollected = (paymentsRaw ?? []).reduce((s, p) => s + Number(p.amount), 0)
+  const paymentCount   = (paymentsRaw ?? []).length
+
   return (
     <BankDepositsClient
       deposits={deposits}
       activeYearLabel={activeYear.label}
+      totalCollected={totalCollected}
+      paymentCount={paymentCount}
     />
   )
 }
