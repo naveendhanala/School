@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Course, Gender } from '@/lib/types'
 import { BridgeCourseClient } from './bridge-course-client'
+import { NoActiveYear } from '@/components/no-active-year'
 
 export type BridgeStudentRow = {
   id: string
@@ -36,14 +37,7 @@ export default async function BridgeCoursePage() {
     .eq('is_active', true)
     .maybeSingle()
 
-  if (!activeYear) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-900">Bridge Course</h1>
-        <p className="mt-2 text-gray-500">No active academic year. Set one up in Fee Setup.</p>
-      </div>
-    )
-  }
+  if (!activeYear) return <NoActiveYear title="Bridge Course" />
 
   const { data: studentsRaw } = await supabase
     .from('bridge_students')

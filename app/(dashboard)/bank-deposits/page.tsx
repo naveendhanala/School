@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { BankDepositsClient } from './bank-deposits-client'
+import { NoActiveYear } from '@/components/no-active-year'
 
 export type DepositRow = {
   id: string
@@ -21,14 +22,7 @@ export default async function BankDepositsPage() {
     .eq('is_active', true)
     .maybeSingle()
 
-  if (!activeYear) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-900">Bank Deposits</h1>
-        <p className="mt-2 text-gray-500">No active academic year. Set one up in Fee Setup.</p>
-      </div>
-    )
-  }
+  if (!activeYear) return <NoActiveYear title="Bank Deposits" />
 
   const [{ data: depositsRaw }, { data: paymentsRaw }] = await Promise.all([
     supabase

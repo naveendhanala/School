@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { calcStudentFee } from '@/lib/utils/fee-calc'
 import type { Gender } from '@/lib/types'
 import { StudentsClient } from './students-client'
+import { NoActiveYear } from '@/components/no-active-year'
 
 export interface StudentRow {
   id: string
@@ -31,14 +32,7 @@ export default async function StudentsPage() {
     .eq('is_active', true)
     .maybeSingle()
 
-  if (!activeYear) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-900">Students</h1>
-        <p className="mt-2 text-gray-500">No active academic year. Set one up in Fee Setup.</p>
-      </div>
-    )
-  }
+  if (!activeYear) return <NoActiveYear title="Students" />
 
   const [{ data: enrollmentsRaw }, { data: feeStructure }] = await Promise.all([
     supabase

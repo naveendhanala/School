@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { calcStudentFee } from '@/lib/utils/fee-calc'
 import { buildClassFeeMap } from '@/lib/utils/fee-utils'
 import { DashboardClient } from './dashboard-client'
+import { NoActiveYear } from '@/components/no-active-year'
 
 export type ClassStat = {
   name: string
@@ -49,14 +50,7 @@ export default async function DashboardPage() {
     .eq('is_active', true)
     .maybeSingle()
 
-  if (!activeYear) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-2 text-gray-500">No active academic year. Set one up in Fee Setup.</p>
-      </div>
-    )
-  }
+  if (!activeYear) return <NoActiveYear title="Dashboard" />
 
   const [{ data: enrollmentsRaw }, { data: feeStructure }, { data: recentRaw }, { data: bankDepositsRaw }] =
     await Promise.all([
