@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
-import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
   Users,
@@ -17,21 +17,46 @@ import { createClient } from '@/lib/supabase/client'
 import { useUser } from '@/lib/user-context'
 import type { Role } from '@/lib/types'
 
-const NAV_ITEMS = [
-  { href: '/',              label: 'Dashboard',     icon: LayoutDashboard, roles: ['admin', 'accountant', 'cashier'] },
-  { href: '/students',     label: 'Students',      icon: Users,           roles: ['admin', 'accountant', 'cashier'] },
-  { href: '/collect-fee',  label: 'Collect Fee',   icon: CreditCard,      roles: ['admin', 'accountant', 'cashier'] },
-  { href: '/pending-fees', label: 'Pending Fees',  icon: Clock,           roles: ['admin', 'accountant'] },
-  { href: '/bank-deposits',label: 'Bank Deposits', icon: Landmark,        roles: ['admin', 'accountant'] },
-  { href: '/bridge-course',label: 'Bridge Course', icon: GraduationCap,   roles: ['admin', 'accountant', 'cashier'] },
-  { href: '/reports',      label: 'Reports',       icon: BarChart3,       roles: ['admin', 'accountant'] },
-  { href: '/fee-setup',    label: 'Fee Setup',     icon: Settings,        roles: ['admin'] },
+const NAV_GROUPS = [
+  {
+    label: 'Overview',
+    items: [
+      { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'accountant', 'cashier'] },
+    ],
+  },
+  {
+    label: 'Fee Management',
+    items: [
+      { href: '/students',     label: 'Students',     icon: Users,        roles: ['admin', 'accountant', 'cashier'] },
+      { href: '/collect-fee',  label: 'Collect Fee',  icon: CreditCard,   roles: ['admin', 'accountant', 'cashier'] },
+      { href: '/pending-fees', label: 'Pending Fees', icon: Clock,        roles: ['admin', 'accountant'] },
+    ],
+  },
+  {
+    label: 'Banking',
+    items: [
+      { href: '/bank-deposits', label: 'Bank Deposits', icon: Landmark, roles: ['admin', 'accountant'] },
+    ],
+  },
+  {
+    label: 'Bridge Course',
+    items: [
+      { href: '/bridge-course', label: 'Summer Camp 2026', icon: GraduationCap, roles: ['admin', 'accountant', 'cashier'] },
+    ],
+  },
+  {
+    label: 'Administration',
+    items: [
+      { href: '/reports',   label: 'Reports',       icon: BarChart3, roles: ['admin', 'accountant'] },
+      { href: '/fee-setup', label: 'Fee Structure', icon: Settings,  roles: ['admin'] },
+    ],
+  },
 ] as const
 
-const ROLE_BADGE: Record<Role, string> = {
-  admin:      'bg-blue-100 text-blue-700',
-  accountant: 'bg-green-100 text-green-700',
-  cashier:    'bg-gray-100 text-gray-600',
+const ROLE_COLORS: Record<Role, string> = {
+  admin:      '#1A4FA0',
+  accountant: '#1A7A4A',
+  cashier:    '#475569',
 }
 
 export function Sidebar() {
@@ -41,65 +66,175 @@ export function Sidebar() {
   const supabase = createClient()
 
   async function handleSignOut() {
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      console.error('Sign out failed:', error.message)
-    }
+    await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
   }
 
-  const visibleItems = NAV_ITEMS.filter(item =>
-    (item.roles as readonly string[]).includes(role)
-  )
+  const initial = name ? name.charAt(0).toUpperCase() : '?'
 
   return (
-    <aside className="w-60 shrink-0 bg-white border-r border-gray-200 flex flex-col h-screen sticky top-0">
-      <div className="p-4 border-b border-gray-200">
-        <h1 className="text-sm font-semibold text-gray-900 leading-snug">
-          Rama School of Excellence
-        </h1>
+    <aside
+      style={{
+        width: '252px',
+        background: '#0F172A',
+        color: '#fff',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        position: 'sticky',
+        top: 0,
+        zIndex: 200,
+        overflowY: 'auto',
+        flexShrink: 0,
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          padding: '10px 12px',
+          borderBottom: '1px solid rgba(255,255,255,.07)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Image
+            src="/school-logo.jpeg"
+            alt="Rama School"
+            width={38}
+            height={38}
+            style={{ borderRadius: '50%', border: '2px solid rgba(255,255,255,.3)', flexShrink: 0 }}
+          />
+          <div>
+            <div
+              style={{
+                fontFamily: 'var(--font-poppins)',
+                fontSize: '11px',
+                fontWeight: 800,
+                color: '#E8581A',
+                lineHeight: 1.3,
+              }}
+            >
+              RAMA SCHOOL OF EXCELLENCE
+            </div>
+            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '1px' }}>
+              Fee Tracker · 2025–26
+            </div>
+            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,.4)', marginTop: '1px' }}>
+              📞 9603278460
+            </div>
+          </div>
+        </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
-        {visibleItems.map(item => {
-          const isActive = item.href === '/'
-            ? pathname === '/'
-            : pathname.startsWith(item.href)
+      {/* Nav */}
+      <nav style={{ flex: 1, padding: '8px 0' }}>
+        {NAV_GROUPS.map(group => {
+          const visible = group.items.filter(item =>
+            (item.roles as readonly string[]).includes(role)
+          )
+          if (visible.length === 0) return null
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-blue-50 text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-              )}
-            >
-              <item.icon className="h-4 w-4 shrink-0" />
-              {item.label}
-            </Link>
+            <div key={group.label}>
+              <div
+                style={{
+                  padding: '12px 16px 3px',
+                  fontSize: '9px',
+                  color: 'rgba(255,255,255,.25)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1.2px',
+                  fontWeight: 600,
+                }}
+              >
+                {group.label}
+              </div>
+              {visible.map(item => {
+                const isActive = item.href === '/'
+                  ? pathname === '/'
+                  : pathname.startsWith(item.href)
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '9px',
+                      padding: '9px 13px',
+                      borderRadius: '9px',
+                      margin: '1px 7px',
+                      fontSize: '12.5px',
+                      fontWeight: 500,
+                      textDecoration: 'none',
+                      color: isActive ? '#fff' : 'rgba(255,255,255,.6)',
+                      background: isActive
+                        ? 'linear-gradient(135deg,#E8581A,#FF7A3C)'
+                        : 'transparent',
+                      boxShadow: isActive ? '0 4px 12px rgba(232,88,26,.4)' : 'none',
+                      transition: 'all .2s',
+                    }}
+                  >
+                    <item.icon size={15} style={{ flexShrink: 0, opacity: isActive ? 1 : 0.7 }} />
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </div>
           )
         })}
       </nav>
 
-      <div className="p-4 border-t border-gray-200">
-        <div className="flex items-center gap-2 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
-          <span className={cn(
-            'shrink-0 rounded-full px-2 py-0.5 text-xs font-medium capitalize',
-            ROLE_BADGE[role]
-          )}>
+      {/* Footer */}
+      <div
+        style={{
+          padding: '12px',
+          borderTop: '1px solid rgba(255,255,255,.07)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '9px',
+        }}
+      >
+        <div
+          style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            background: `linear-gradient(135deg, ${ROLE_COLORS[role]}, #2A6DD9)`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontFamily: 'var(--font-poppins)',
+            fontWeight: 800,
+            fontSize: '13px',
+            flexShrink: 0,
+          }}
+        >
+          {initial}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {name}
+          </div>
+          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.4)', textTransform: 'capitalize' }}>
             {role}
-          </span>
+          </div>
         </div>
         <button
           onClick={handleSignOut}
-          className="mt-2 flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          title="Sign out"
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'rgba(255,255,255,.4)',
+            cursor: 'pointer',
+            padding: '4px',
+            borderRadius: '6px',
+            display: 'flex',
+            alignItems: 'center',
+          }}
+          onMouseOver={e => (e.currentTarget.style.color = '#fff')}
+          onMouseOut={e => (e.currentTarget.style.color = 'rgba(255,255,255,.4)')}
         >
-          <LogOut className="h-4 w-4" />
-          Sign out
+          <LogOut size={16} />
         </button>
       </div>
     </aside>
