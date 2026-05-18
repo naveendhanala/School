@@ -10,11 +10,13 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { Download, Plus, Trash2 } from 'lucide-react'
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
-  PieChart, Pie, Cell, ResponsiveContainer,
-} from 'recharts'
+import dynamic from 'next/dynamic'
 import { toast } from 'sonner'
+
+const BridgeCharts = dynamic(
+  () => import('./bridge-charts').then(m => ({ default: m.BridgeCharts })),
+  { ssr: false, loading: () => <div className="h-64 animate-pulse rounded-lg bg-gray-100" /> }
+)
 import { deleteBridgeStudent, deleteBridgeDeposit } from './actions'
 import { AddStudentDialog } from './add-student-dialog'
 import { PaymentDialog } from './payment-dialog'
@@ -89,7 +91,6 @@ export function BridgeCourseClient({
     { name: 'PhonePe', value: totalPhonePe },
     { name: 'HDFC', value: totalHdfc },
   ].filter(d => d.value > 0)
-  const PIE_COLORS = ['#4ade80', '#60a5fa', '#f97316']
 
   function handleDeleteStudent(id: string, name: string) {
     if (!window.confirm(`Delete ${name}? This will also delete all their payments.`)) return
@@ -357,54 +358,7 @@ export function BridgeCourseClient({
 
       {/* Charts */}
       {students.length > 0 && (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="rounded-lg border bg-white p-4">
-            <h2 className="mb-4 font-semibold text-gray-900">Course-wise Collection</h2>
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={barData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis
-                  tick={{ fontSize: 11 }}
-                  tickFormatter={(v: number) => v >= 1000 ? `₹${(v / 1000).toFixed(0)}k` : `₹${v}`}
-                />
-                <Tooltip formatter={(value: unknown) => [`₹${Number(value).toLocaleString('en-IN')}`, undefined]} />
-                <Legend />
-                <Bar dataKey="Collected" fill="#4ade80" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Balance" fill="#f87171" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="rounded-lg border bg-white p-4">
-            <h2 className="mb-4 font-semibold text-gray-900">Payment Mode Split</h2>
-            {pieData.length === 0 ? (
-              <p className="text-sm text-gray-400">No payments yet.</p>
-            ) : (
-              <ResponsiveContainer width="100%" height={240}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={90}
-                    label={({ name, percent }: { name?: string; percent?: number }) =>
-                      `${name ?? ''} ${((percent ?? 0) * 100).toFixed(0)}%`
-                    }
-                    labelLine={false}
-                  >
-                    {pieData.map((_, i) => (
-                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: unknown) => [`₹${Number(value).toLocaleString('en-IN')}`, undefined]} />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </div>
+        <BridgeCharts barData={barData} pieData={pieData} />
       )}
 
       <AddStudentDialog open={addStudentOpen} onOpenChange={setAddStudentOpen} />
