@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { calcStudentFee } from '@/lib/utils/fee-calc'
-import type { ClassFeeHead, FeeHead, PaymentMode } from '@/lib/types'
+import type { FeeHead, PaymentMode } from '@/lib/types'
+import { buildClassFeeMap } from '@/lib/utils/fee-utils'
 import { ReportsClient } from './reports-client'
 
 export type ReportPayment = {
@@ -194,12 +195,7 @@ export default async function ReportsPage() {
     }))
 
   // class-wise + transport-wise
-  const classFeeMap = new Map<string, Record<ClassFeeHead, number>>()
-  for (const fs of feeStructure ?? []) {
-    const entry = classFeeMap.get(fs.class_id) ?? { tuition: 0, book: 0 }
-    ;(entry as Record<string, number>)[fs.fee_head] = Number(fs.amount)
-    classFeeMap.set(fs.class_id, entry)
-  }
+  const classFeeMap = buildClassFeeMap(feeStructure ?? [])
 
   const classStatsMap = new Map<string, ClasswiseRow>()
   const routeStatsMap = new Map<string | null, TransportwiseRow>()

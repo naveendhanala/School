@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { calcStudentFee } from '@/lib/utils/fee-calc'
-import type { ClassFeeHead } from '@/lib/types'
+import { buildClassFeeMap } from '@/lib/utils/fee-utils'
 import { PendingFeesClient } from './pending-fees-client'
 
 export type PendingRow = {
@@ -61,13 +61,7 @@ export default async function PendingFeesPage() {
 
   const enrollments = enrollmentsRaw ?? []
 
-  // class_id → { tuition: number, book: number }
-  const classFeeMap = new Map<string, Record<ClassFeeHead, number>>()
-  for (const fs of feeStructure ?? []) {
-    const entry = classFeeMap.get(fs.class_id) ?? { tuition: 0, book: 0 }
-    ;(entry as Record<string, number>)[fs.fee_head] = Number(fs.amount)
-    classFeeMap.set(fs.class_id, entry)
-  }
+  const classFeeMap = buildClassFeeMap(feeStructure ?? [])
 
   const rows: PendingRow[] = enrollments
     .filter(e => {
